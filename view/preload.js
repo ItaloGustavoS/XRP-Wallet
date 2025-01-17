@@ -5,7 +5,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
   // By calling "onUpdateLedgerIndex" in the frontend process we can now attach a callback function
   // by making onUpdateLedgerIndex available at the window level.
   // The subscribed function gets triggered whenever the backend process triggers the event 'update-ledger-index'
-  onUpdateLedgerIndex: (callback) => {
-    ipcRenderer.on("update-ledger-index", callback);
+  onUpdateLedgerData: (callback) => {
+    ipcRenderer.on("update-ledger-data", callback);
   },
 });

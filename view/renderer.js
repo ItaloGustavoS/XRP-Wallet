@@ -1,7 +1,9 @@
 const ledgerIndexEl = document.getElementById("ledger-index");
+const ledgerHashEl = document.getElementById("ledger-hash");
+const ledgerCloseTimeEl = document.getElementById("ledger-close-time");
 
-// Here we define the callback function that performs the content update
-// whenever 'update-ledger-index' is called by the main process
-window.electronAPI.onUpdateLedgerIndex((_event, value) => {
-  ledgerIndexEl.innerText = value;
+window.electronAPI.onUpdateLedgerData((_event, value) => {
+  ledgerIndexEl.innerText = value.ledger_index;
+  ledgerHashEl.innerText = value.ledger_hash;
+  ledgerCloseTimeEl.innerText = value.ledger_time;
 });

@@ -10,23 +10,6 @@ const TESTNET_URL = "wss://s.altnet.rippletest.net:51233";
  *
  * @returns {Promise<number>}
  */
-const getValidatedLedgerIndex = async () => {
-  const client = new xrpl.Client(TESTNET_URL);
-
-  await client.connect();
-
-  // Reference: https://xrpl.org/ledger.html#ledger
-  const ledgerRequest = {
-    command: "ledger",
-    ledger_index: "validated",
-  };
-
-  const ledgerResponse = await client.request(ledgerRequest);
-
-  await client.disconnect();
-
-  return ledgerResponse.result.ledger_index;
-};
 
 /**
  * This is our main function, it creates our application window, preloads the code we will need to communicate
@@ -52,10 +35,24 @@ const createWindow = () => {
 // to execute our code. In this case we create a main window, query
 // the ledger for its latest index and submit the result to the main
 // window where it will be displayed
-app.whenReady().then(() => {
+const main = async () => {
   const appWindow = createWindow();
 
-  getValidatedLedgerIndex().then((value) => {
-    appWindow.webContents.send("update-ledger-index", value);
+  const client = new xrpl.Client(TESTNET_URL);
+
+  await client.connect();
+
+  // Subscribe client to 'ledger' events
+  // Reference: https://xrpl.org/subscribe.html
+  await client.request({
+    command: "subscribe",
+    streams: ["ledger"],
   });
-});
+
+  // Dispatch 'update-ledger-data' event
+  client.on("ledgerClosed", async (ledger) => {
+    appWindow.webContents.send("update-ledger-data", ledger);
+  });
+};
+
+app.whenReady().then(main);
