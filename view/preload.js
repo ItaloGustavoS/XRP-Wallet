@@ -1,11 +1,16 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
-// Expose functionality from main process (aka. "backend") to be used by the renderer process(aka. "backend")
 contextBridge.exposeInMainWorld("electronAPI", {
-  // By calling "onUpdateLedgerIndex" in the frontend process we can now attach a callback function
-  // by making onUpdateLedgerIndex available at the window level.
-  // The subscribed function gets triggered whenever the backend process triggers the event 'update-ledger-index'
   onUpdateLedgerData: (callback) => {
     ipcRenderer.on("update-ledger-data", callback);
   },
+
+  // Step 3 code additions - start
+  onEnterAccountAddress: (address) => {
+    ipcRenderer.send("address-entered", address);
+  },
+  onUpdateAccountData: (callback) => {
+    ipcRenderer.on("update-account-data", callback);
+  },
+  //Step 3 code additions - end
 });

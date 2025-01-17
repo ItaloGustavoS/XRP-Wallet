@@ -2,6 +2,10 @@ const { app, BrowserWindow } = require("electron");
 
 const path = require("path");
 const xrpl = require("xrpl");
+const {
+  prepareAccountData,
+  prepareLedgerData,
+} = require("./library/3_helpers");
 
 const TESTNET_URL = "wss://s.altnet.rippletest.net:51233";
 
@@ -38,21 +42,63 @@ const createWindow = () => {
 const main = async () => {
   const appWindow = createWindow();
 
-  const client = new xrpl.Client(TESTNET_URL);
+  // Step 3 code modifications - start
+  ipcMain.on("address-entered", async (event, address) => {
+    const client = new xrpl.Client(TESTNET_URL);
 
-  await client.connect();
+    await client.connect();
 
-  // Subscribe client to 'ledger' events
-  // Reference: https://xrpl.org/subscribe.html
-  await client.request({
-    command: "subscribe",
-    streams: ["ledger"],
+    // Reference: https://xrpl.org/subscribe.html
+    await client.request({
+      command: "subscribe",
+      streams: ["ledger"],
+      accounts: [address],
+    });
+
+    // Reference: https://xrpl.org/subscribe.html#ledger-stream
+    client.on("ledgerClosed", async (rawLedgerData) => {
+      const ledger = prepareLedgerData(rawLedgerData);
+      appWindow.webContents.send("update-ledger-data", ledger);
+    });
+
+    // Initial Ledger Request -> Get account details on startup
+    // Reference: https://xrpl.org/ledger.html
+    const ledgerResponse = await client.request({
+      command: "ledger",
+    });
+    const initialLedgerData = prepareLedgerData(
+      ledgerResponse.result.closed.ledger
+    );
+    appWindow.webContents.send("update-ledger-data", initialLedgerData);
+
+    // Reference: https://xrpl.org/subscribe.html#transaction-streams
+    client.on("transaction", async (transaction) => {
+      // Reference: https://xrpl.org/account_info.html
+      const accountInfoRequest = {
+        command: "account_info",
+        account: address,
+        ledger_index: transaction.ledger_index,
+      };
+      const accountInfoResponse = await client.request(accountInfoRequest);
+      const accountData = prepareAccountData(
+        accountInfoResponse.result.account_data
+      );
+      appWindow.webContents.send("update-account-data", accountData);
+    });
+
+    // Initial Account Request -> Get account details on startup
+    // Reference: https://xrpl.org/account_info.html
+    const accountInfoResponse = await client.request({
+      command: "account_info",
+      account: address,
+      ledger_index: "current",
+    });
+    const accountData = prepareAccountData(
+      accountInfoResponse.result.account_data
+    );
+    appWindow.webContents.send("update-account-data", accountData);
   });
-
-  // Dispatch 'update-ledger-data' event
-  client.on("ledgerClosed", async (ledger) => {
-    appWindow.webContents.send("update-ledger-data", ledger);
-  });
+  // Step 3 code modifications - end
 };
 
 app.whenReady().then(main);

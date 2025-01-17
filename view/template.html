@@ -14,13 +14,33 @@
   </head>
 
   <body>
-    <!-- Step 2 code additions - start -->
-    <h3>Build a XRPL Wallet - Part 2/8</h3>
-    <b>Latest validated ledger stats</b><br />
-    Ledger Index: <strong id="ledger-index"></strong><br />
-    Ledger Hash: <strong id="ledger-hash"></strong><br />
-    Close Time: <strong id="ledger-close-time"></strong><br />
-    <!-- Step 2 code additions - end -->
+    <h3>Build a XRPL Wallet - Part 3/8</h3>
+
+    <fieldset>
+      <legend>Account info</legend>
+      Classic Address: <strong id="account-address-classic"></strong><br />
+      X-Address: <strong id="account-address-x"></strong><br />
+      XRP Balance: <strong id="account-balance"></strong><br />
+    </fieldset>
+
+    <fieldset>
+      <legend>Latest validated ledger stats</legend>
+      Ledger Index: <strong id="ledger-index"></strong><br />
+      Ledger Hash: <strong id="ledger-hash"></strong><br />
+      Close Time: <strong id="ledger-close-time"></strong><br />
+    </fieldset>
+
+    <dialog id="account-address-dialog">
+      <form method="dialog">
+        <div>
+          <label for="address-input">Enter account address:</label>
+          <input type="text" id="address-input" name="address-input" />
+        </div>
+        <div>
+          <button type="submit">Confirm</button>
+        </div>
+      </form>
+    </dialog>
   </body>
   <!-- Step 1 code additions - start -->
   <script src="renderer.js"></script>
