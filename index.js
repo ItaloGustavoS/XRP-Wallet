@@ -1,20 +1,17 @@
-const { app, BrowserWindow } = require("electron");
-
+const { app, BrowserWindow, ipcMain } = require("electron");
+const fs = require("fs");
 const path = require("path");
 const xrpl = require("xrpl");
 const {
-  prepareAccountData,
-  prepareLedgerData,
-} = require("./library/3_helpers");
-
-const {
-  prepareAccountData,
-  prepareLedgerData,
-} = require("./library/3_helpers");
-
-const { prepareTxData } = require("./library/4_helpers");
+  initialize,
+  subscribe,
+  saveSaltedSeed,
+  loadSaltedSeed,
+} = require("./library/5_helpers");
 
 const TESTNET_URL = "wss://s.altnet.rippletest.net:51233";
+
+const WALLET_DIR = "Wallet";
 
 /**
  * This function creates a WebService client, which connects to the XRPL and fetches the latest ledger index.
