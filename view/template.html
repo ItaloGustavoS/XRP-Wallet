@@ -47,14 +47,28 @@
       </table>
     </fieldset>
 
-    <dialog id="account-address-dialog">
+    <dialog id="seed-dialog">
       <form method="dialog">
         <div>
-          <label for="address-input">Enter account address:</label>
-          <input type="text" id="address-input" name="address-input" />
+          <label for="seed-input">Enter seed:</label>
+          <input type="text" id="seed-input" name="seed-input" />
         </div>
         <div>
           <button type="submit">Confirm</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="password-dialog">
+      <form method="dialog">
+        <div>
+          <label for="password-input">Enter password (min-length 5):</label>
+          <input type="text" id="password-input" name="password-input" /><br />
+          <span class="invalid-password"></span>
+        </div>
+        <div>
+          <button type="button">Change Seed</button>
+          <button type="submit">Submit</button>
         </div>
       </form>
     </dialog>

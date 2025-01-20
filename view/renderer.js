@@ -1,22 +1,64 @@
-document.addEventListener("DOMContentLoaded", openAccountAddressDialog);
+const seedDialog = document.getElementById("seed-dialog");
+const seedInput = seedDialog.querySelector("input");
+const seedSubmitButton = seedDialog.querySelector('button[type="submit"]');
 
-function openAccountAddressDialog() {
-  const accountAddressDialog = document.getElementById(
-    "account-address-dialog"
-  );
-  const accountAddressInput = accountAddressDialog.querySelector("input");
-  const submitButton = accountAddressDialog.querySelector(
-    'button[type="submit"]'
-  );
+const seedSubmitFn = () => {
+  const seed = seedInput.value;
+  window.electronAPI.onEnterSeed(seed);
+  seedDialog.close();
+};
 
-  submitButton.addEventListener("click", () => {
-    const address = accountAddressInput.value;
-    window.electronAPI.onEnterAccountAddress(address);
-    accountAddressDialog.close();
-  });
+window.electronAPI.onOpenSeedDialog((_event) => {
+  seedSubmitButton.addEventListener("click", seedSubmitFn, { once: true });
 
-  accountAddressDialog.showModal();
-}
+  seedDialog.showModal();
+});
+
+const passwordDialog = document.getElementById("password-dialog");
+const passwordInput = passwordDialog.querySelector("input");
+const passwordError = passwordDialog.querySelector("span.invalid-password");
+const passwordSubmitButton = passwordDialog.querySelector(
+  'button[type="submit"]'
+);
+const changeSeedButton = passwordDialog.querySelector('button[type="button"]');
+
+const handlePasswordSubmitFn = () => {
+  const password = passwordInput.value;
+  window.electronAPI.onEnterPassword(password);
+  passwordDialog.close();
+};
+
+const handleChangeSeedFn = () => {
+  passwordDialog.close();
+  window.electronAPI.requestSeedChange();
+};
+
+window.electronAPI.onOpenPasswordDialog(
+  (_event, showInvalidPassword = false) => {
+    if (showInvalidPassword) {
+      passwordError.innerHTML = "INVALID PASSWORD";
+    }
+    passwordSubmitButton.addEventListener("click", handlePasswordSubmitFn, {
+      once: true,
+    });
+    changeSeedButton.addEventListener("click", handleChangeSeedFn, {
+      once: true,
+    });
+    passwordDialog.showModal();
+  }
+);
+const accountAddressInput = accountAddressDialog.querySelector("input");
+const submitButton = accountAddressDialog.querySelector(
+  'button[type="submit"]'
+);
+
+submitButton.addEventListener("click", () => {
+  const address = accountAddressInput.value;
+  window.electronAPI.onEnterAccountAddress(address);
+  accountAddressDialog.close();
+});
+
+accountAddressDialog.showModal();
 
 const ledgerIndexEl = document.getElementById("ledger-index");
 const ledgerHashEl = document.getElementById("ledger-hash");
