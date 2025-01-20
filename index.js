@@ -111,8 +111,20 @@ const main = async () => {
       accountInfoResponse.result.account_data
     );
     appWindow.webContents.send("update-account-data", accountData);
+
+    // Step 4 code additions - start
+
+    // Initial Transaction Request -> List account transactions on startup
+    // Reference: https://xrpl.org/account_tx.html
+    const txResponse = await client.request({
+      command: "account_tx",
+      account: address,
+    });
+    const transactions = prepareTxData(txResponse.result.transactions);
+    appWindow.webContents.send("update-transaction-data", transactions);
+
+    // Step 4 code additions - end
   });
-  // Step 3 code modifications - end
 };
 
 app.whenReady().then(main);
