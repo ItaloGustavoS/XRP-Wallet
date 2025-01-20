@@ -8,6 +8,13 @@ const {
   saveSaltedSeed,
   loadSaltedSeed,
 } = require("./library/5_helpers");
+const {
+  initialize,
+  subscribe,
+  saveSaltedSeed,
+  loadSaltedSeed,
+} = require("./library/5_helpers");
+const { sendXrp } = require("./library/7_helpers");
 
 const TESTNET_URL = "wss://s.altnet.rippletest.net:51233";
 
@@ -79,6 +86,14 @@ const main = async () => {
     await subscribe(client, wallet, appWindow);
 
     await initialize(client, wallet, appWindow);
+  });
+
+  await initialize(client, wallet, appWindow);
+  // Step 7 code additions - start
+  ipcMain.on("send-xrp-action", (event, paymentData) => {
+    sendXrp(paymentData, client, wallet).then((result) => {
+      appWindow.webContents.send("send-xrp-transaction-finish", result);
+    });
   });
 
   ipcMain.on("request-seed-change", (event) => {

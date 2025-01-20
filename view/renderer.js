@@ -85,6 +85,41 @@ window.electronAPI.onUpdateAccountData((_event, value) => {
 const txTableBodyEl = document.getElementById("tx-table").tBodies[0];
 window.testEl = txTableBodyEl;
 
+const modalButton = document.getElementById("send-xrp-modal-button");
+const modalDialog = new bootstrap.Modal(
+  document.getElementById("send-xrp-modal")
+);
+modalButton.addEventListener("click", () => {
+  modalDialog.show();
+});
+
+const destinationAddressEl = document.getElementById(
+  "input-destination-address"
+);
+const destinationTagEl = document.getElementById("input-destination-tag");
+const amountEl = document.getElementById("input-xrp-amount");
+const sendXrpButtonEl = document.getElementById("send-xrp-submit-button");
+
+sendXrpButtonEl.addEventListener("click", () => {
+  modalDialog.hide();
+  const destinationAddress = destinationAddressEl.value;
+  const destinationTag = destinationTagEl.value;
+  const amount = amountEl.value;
+
+  window.electronAPI.onClickSendXrp({
+    destinationAddress,
+    destinationTag,
+    amount,
+  });
+});
+
+window.electronAPI.onSendXrpTransactionFinish((_event, result) => {
+  alert("Result: " + result.result.meta.TransactionResult);
+  destinationAddressEl.value = "";
+  destinationTagEl.value = "";
+  amountEl.value = "";
+});
+
 window.electronAPI.onUpdateTransactionData((_event, transactions) => {
   for (let transaction of transactions) {
     txTableBodyEl.insertAdjacentHTML(
