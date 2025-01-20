@@ -46,81 +46,58 @@ const createWindow = () => {
 const main = async () => {
   const appWindow = createWindow();
 
-  // Step 3 code modifications - start
-  ipcMain.on("address-entered", async (event, address) => {
+  // Create Wallet directory in case it does not exist yet
+  if (!fs.existsSync(path.join(__dirname, WALLET_DIR))) {
+    fs.mkdirSync(path.join(__dirname, WALLET_DIR));
+  }
+
+  let seed = null;
+
+  ipcMain.on("seed-entered", async (event, providedSeed) => {
+    seed = providedSeed;
+    appWindow.webContents.send("open-password-dialog");
+  });
+
+  ipcMain.on("password-entered", async (event, password) => {
+    if (!fs.existsSync(path.join(__dirname, WALLET_DIR, "seed.txt"))) {
+      saveSaltedSeed("../" + WALLET_DIR, seed, password);
+    } else {
+      try {
+        seed = loadSaltedSeed("../" + WALLET_DIR, password);
+      } catch (error) {
+        appWindow.webContents.send("open-password-dialog", true);
+        return;
+      }
+    }
+
+    const wallet = xrpl.Wallet.fromSeed(seed);
+
     const client = new xrpl.Client(TESTNET_URL);
 
     await client.connect();
 
-    // Reference: https://xrpl.org/subscribe.html
-    await client.request({
-      command: "subscribe",
-      streams: ["ledger"],
-      accounts: [address],
-    });
+    await subscribe(client, wallet, appWindow);
 
-    // Reference: https://xrpl.org/subscribe.html#ledger-stream
-    client.on("ledgerClosed", async (rawLedgerData) => {
-      const ledger = prepareLedgerData(rawLedgerData);
-      appWindow.webContents.send("update-ledger-data", ledger);
-    });
+    await initialize(client, wallet, appWindow);
+  });
 
-    // Initial Ledger Request -> Get account details on startup
-    // Reference: https://xrpl.org/ledger.html
-    const ledgerResponse = await client.request({
-      command: "ledger",
-    });
-    const initialLedgerData = prepareLedgerData(
-      ledgerResponse.result.closed.ledger
-    );
-    appWindow.webContents.send("update-ledger-data", initialLedgerData);
+  ipcMain.on("request-seed-change", (event) => {
+    fs.rmSync(path.join(__dirname, WALLET_DIR, "seed.txt"));
+    fs.rmSync(path.join(__dirname, WALLET_DIR, "salt.txt"));
+    appWindow.webContents.send("open-seed-dialog");
+  });
 
-    // Reference: https://xrpl.org/subscribe.html#transaction-streams
-    // Wait for transaction on subscribed account and re-request account data
-    client.on("transaction", async (transaction) => {
-      // Reference: https://xrpl.org/account_info.html
-      const accountInfoRequest = {
-        command: "account_info",
-        account: address,
-        ledger_index: transaction.ledger_index,
-      };
-
-      const accountInfoResponse = await client.request(accountInfoRequest);
-      const accountData = prepareAccountData(
-        accountInfoResponse.result.account_data
-      );
-      appWindow.webContents.send("update-account-data", accountData);
-
-      // Step 4 code additions - start
-      const transactions = prepareTxData([{ tx: transaction.transaction }]);
-      appWindow.webContents.send("update-transaction-data", transactions);
-      // Step 4 code additions - end
-    });
-
-    // Initial Account Request -> Get account details on startup
-    // Reference: https://xrpl.org/account_info.html
-    const accountInfoResponse = await client.request({
-      command: "account_info",
-      account: address,
-      ledger_index: "current",
-    });
-    const accountData = prepareAccountData(
-      accountInfoResponse.result.account_data
-    );
-    appWindow.webContents.send("update-account-data", accountData);
-
-    // Step 4 code additions - start
-
-    // Initial Transaction Request -> List account transactions on startup
-    // Reference: https://xrpl.org/account_tx.html
-    const txResponse = await client.request({
-      command: "account_tx",
-      account: address,
-    });
-    const transactions = prepareTxData(txResponse.result.transactions);
-    appWindow.webContents.send("update-transaction-data", transactions);
-
-    // Step 4 code additions - end
+  // We have to wait for the application frontend to be ready, otherwise
+  // we might run into a race condition and the open-dialog events
+  // get triggered before the callbacks are attached
+  appWindow.once("ready-to-show", () => {
+    // If there is no seed present yet, ask for it, otherwise query for the password
+    // for the seed that has been saved
+    if (!fs.existsSync(path.join(__dirname, WALLET_DIR, "seed.txt"))) {
+      appWindow.webContents.send("open-seed-dialog");
+    } else {
+      appWindow.webContents.send("open-password-dialog");
+    }
   });
 };
 
