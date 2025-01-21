@@ -7,9 +7,10 @@ const {
   subscribe,
   saveSaltedSeed,
   loadSaltedSeed,
-} = require("../library/5_helpers");
-const { sendXrp } = require("../library/7_helpers");
-const { verify } = require("../library/8_helpers");
+} = require(path.resolve(__dirname, "library/5_helpers"));
+
+const { sendXrp } = require(path.resolve(__dirname, "library/7_helpers"));
+const { verify } = require(path.resolve(__dirname, "library/8_helpers"));
 
 const TESTNET_URL = "wss://s.altnet.rippletest.net:51233";
 
