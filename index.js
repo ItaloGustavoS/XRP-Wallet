@@ -7,32 +7,15 @@ const {
   subscribe,
   saveSaltedSeed,
   loadSaltedSeed,
-} = require("./library/5_helpers");
-const {
-  initialize,
-  subscribe,
-  saveSaltedSeed,
-  loadSaltedSeed,
-} = require("./library/5_helpers");
-const { sendXrp } = require("./library/7_helpers");
-const { verify } = require("./library/8_helpers");
+} = require("../library/5_helpers");
+const { sendXrp } = require("../library/7_helpers");
+const { verify } = require("../library/8_helpers");
 
 const TESTNET_URL = "wss://s.altnet.rippletest.net:51233";
 
-const WALLET_DIR = "Wallet";
+const WALLET_DIR = "../Wallet";
 
-/**
- * This function creates a WebService client, which connects to the XRPL and fetches the latest ledger index.
- *
- * @returns {Promise<number>}
- */
-
-/**
- * This is our main function, it creates our application window, preloads the code we will need to communicate
- * between the renderer Process and the main Process, loads a layout and performs the main logic
- */
 const createWindow = () => {
-  // Creates the application window
   const appWindow = new BrowserWindow({
     width: 1024,
     height: 768,
@@ -41,16 +24,11 @@ const createWindow = () => {
     },
   });
 
-  // Loads a layout
   appWindow.loadFile(path.join(__dirname, "view", "template.html"));
 
   return appWindow;
 };
 
-// Here we have to wait for the application to signal that it is ready
-// to execute our code. In this case we create a main window, query
-// the ledger for its latest index and submit the result to the main
-// window where it will be displayed
 const main = async () => {
   const appWindow = createWindow();
 
@@ -68,10 +46,10 @@ const main = async () => {
 
   ipcMain.on("password-entered", async (event, password) => {
     if (!fs.existsSync(path.join(__dirname, WALLET_DIR, "seed.txt"))) {
-      saveSaltedSeed("../" + WALLET_DIR, seed, password);
+      saveSaltedSeed(WALLET_DIR, seed, password);
     } else {
       try {
-        seed = loadSaltedSeed("../" + WALLET_DIR, password);
+        seed = loadSaltedSeed(WALLET_DIR, password);
       } catch (error) {
         appWindow.webContents.send("open-password-dialog", true);
         return;
@@ -87,19 +65,17 @@ const main = async () => {
     await subscribe(client, wallet, appWindow);
 
     await initialize(client, wallet, appWindow);
-  });
 
-  await initialize(client, wallet, appWindow);
-  // Step 7 code additions - start
-  ipcMain.on("send-xrp-action", (event, paymentData) => {
-    sendXrp(paymentData, client, wallet).then((result) => {
-      appWindow.webContents.send("send-xrp-transaction-finish", result);
+    ipcMain.on("send-xrp-action", (event, paymentData) => {
+      sendXrp(paymentData, client, wallet).then((result) => {
+        appWindow.webContents.send("send-xrp-transaction-finish", result);
+      });
     });
-  });
 
-  ipcMain.on("destination-account-change", (event, destinationAccount) => {
-    verify(destinationAccount, client).then((result) => {
-      appWindow.webContents.send("update-domain-verification-data", result);
+    ipcMain.on("destination-account-change", (event, destinationAccount) => {
+      verify(destinationAccount, client).then((result) => {
+        appWindow.webContents.send("update-domain-verification-data", result);
+      });
     });
   });
 
@@ -110,7 +86,7 @@ const main = async () => {
   });
 
   // We have to wait for the application frontend to be ready, otherwise
-  // we might run into a race condition and the open-dialog events
+  // we might run into a race condition and the ope-dialog events
   // get triggered before the callbacks are attached
   appWindow.once("ready-to-show", () => {
     // If there is no seed present yet, ask for it, otherwise query for the password
