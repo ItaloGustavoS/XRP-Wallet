@@ -93,11 +93,9 @@ modalButton.addEventListener("click", () => {
   modalDialog.show();
 });
 
-// Step 8 code additions - start
 const accountVerificationEl = document.querySelector(
   ".accountVerificationIndicator span"
 );
-// Step 8 code additions - end
 
 const destinationAddressEl = document.getElementById(
   "input-destination-address"
@@ -106,7 +104,6 @@ const destinationTagEl = document.getElementById("input-destination-tag");
 const amountEl = document.getElementById("input-xrp-amount");
 const sendXrpButtonEl = document.getElementById("send-xrp-submit-button");
 
-// Step 8 code additions - start
 destinationAddressEl.addEventListener("input", (event) => {
   window.electronAPI.onDestinationAccountChange(destinationAddressEl.value);
 });
@@ -116,7 +113,6 @@ window.electronAPI.onUpdateDomainVerificationData((_event, result) => {
     result.domain || "n/a"
   } Verified: ${result.verified}`;
 });
-// Step 8 code additions - end
 
 sendXrpButtonEl.addEventListener("click", () => {
   modalDialog.hide();
